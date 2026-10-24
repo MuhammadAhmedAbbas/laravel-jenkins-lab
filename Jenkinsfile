@@ -9,17 +9,31 @@ pipeline {
             }
         }
 
-        stage('Check Laravel Project') {
+        stage('Validate Laravel') {
             steps {
                 sh 'test -f artisan'
-                sh 'echo "Laravel project found successfully"'
+                sh 'php --version'
+                sh 'composer --version'
+                sh 'echo "Laravel project validation successful"'
             }
         }
 
-        stage('Check PHP and Composer') {
+        stage('Deploy to Server') {
             steps {
-                sh 'php --version'
-                sh 'composer --version'
+                sh '''
+                    rsync -av \
+                      --exclude='.env' \
+                      --exclude='database/database.sqlite' \
+                      --exclude='storage/' \
+                      --exclude='vendor/' \
+                      ./ /var/www/laravel-app/
+
+                    cd /var/www/laravel-app
+                    composer install --no-interaction --prefer-dist --optimize-autoloader
+                    php artisan config:clear
+                    php artisan route:clear
+                    php artisan view:clear
+                '''
             }
         }
     }
