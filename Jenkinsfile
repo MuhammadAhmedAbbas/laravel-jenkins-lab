@@ -19,10 +19,15 @@ pipeline {
         }
 
         
+        
         stage('Deploy to Server') {
             steps {
                 sh '''
-                    rsync -av --no-owner --no-group \
+                    rsync -rvc \
+                      --no-owner \
+                      --no-group \
+                      --no-perms \
+                      --omit-dir-times \
                       --exclude='.git/' \
                       --exclude='.env' \
                       --exclude='.env.*' \
@@ -35,6 +40,7 @@ pipeline {
                 '''
             }
         }
+
 
     }
 }
