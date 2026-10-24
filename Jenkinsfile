@@ -18,23 +18,23 @@ pipeline {
             }
         }
 
+        
         stage('Deploy to Server') {
             steps {
                 sh '''
-                    rsync -av \
+                    rsync -av --no-owner --no-group \
+                      --exclude='.git/' \
                       --exclude='.env' \
+                      --exclude='.env.*' \
                       --exclude='database/database.sqlite' \
                       --exclude='storage/' \
                       --exclude='vendor/' \
+                      --exclude='bootstrap/cache/' \
+                      --exclude='node_modules/' \
                       ./ /var/www/laravel-app/
-
-                    cd /var/www/laravel-app
-                    composer install --no-interaction --prefer-dist --optimize-autoloader
-                    php artisan config:clear
-                    php artisan route:clear
-                    php artisan view:clear
                 '''
             }
         }
+
     }
 }
