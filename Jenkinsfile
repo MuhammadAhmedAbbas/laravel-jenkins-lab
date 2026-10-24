@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -18,8 +17,6 @@ pipeline {
             }
         }
 
-        
-        
         stage('Deploy to Server') {
             steps {
                 sh '''
@@ -41,6 +38,34 @@ pipeline {
             }
         }
 
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t laravel-app-docker .'
+            }
+        }
 
+        stage('Deploy Docker Container') {
+            steps {
+                sh '''
+                    docker rm -f laravel-docker || true
+
+                    docker run -d \
+                      --name laravel-docker \
+                      --restart unless-stopped \
+                      -p 8001:80 \
+                      --env-file /var/www/laravel-app/.env \
+                      -v /var/www/laravel-app/database/database.sqlite:/var/www/html/database/database.sqlite \
+                      laravel-app-docker
+                '''
+            }
+        }
+
+        stage('Verify Docker Deployment') {
+            steps {
+                sh 'sleep 5'
+                sh 'curl --fail http://localhost:8001'
+                sh 'echo "Docker deployment successful"'
+            }
+        }
     }
 }
